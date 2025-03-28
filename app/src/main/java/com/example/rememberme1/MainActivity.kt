@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
+// test
 @Composable
 fun RegisterLayout(viewModel: ReminderViewModel) {
     Column(
