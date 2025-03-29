@@ -66,6 +66,7 @@ dependencies {
     implementation(libs.androidx.room.rxjava3)
     implementation(libs.androidx.room.guava)
     implementation(libs.androidx.room.paging)
+    implementation(libs.androidx.work.runtime.ktx)
     annotationProcessor(libs.androidx.room.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -75,6 +76,5 @@ dependencies {
     annotationProcessor(libs.androidx.room.compiler)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    val roomVersion = "2.5.2"
-    ksp("androidx.room:room-compiler:$roomVersion")
+    ksp(libs.androidx.room.compiler)
 }
