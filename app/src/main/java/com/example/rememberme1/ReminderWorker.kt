@@ -28,7 +28,7 @@ class ReminderWorker(appContext: Context, workerParams: WorkerParameters) : Coro
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = "リマインダー通知"
             val descriptionText = "リマインダーの内容をお知らせします"
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val importance = NotificationManager.IMPORTANCE_HIGH
             val channel = NotificationChannel(channelId, name, importance).apply {
                 description = descriptionText
             }
@@ -43,7 +43,7 @@ class ReminderWorker(appContext: Context, workerParams: WorkerParameters) : Coro
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle("リマインダー")
             .setContentText(content)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
 
         // 通知の表示
         with(NotificationManagerCompat.from(applicationContext)) {

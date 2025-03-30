@@ -15,7 +15,6 @@ roomRxjava2 = "2.6.1"
 roomRxjava3 = "2.6.1"
 roomGuava = "2.6.1"
 roomPaging = "2.6.1"
-symbolProcessingApi = "1.9.20-1.0.14"
 workRuntimeKtx = "2.10.0"
 
 [libraries]

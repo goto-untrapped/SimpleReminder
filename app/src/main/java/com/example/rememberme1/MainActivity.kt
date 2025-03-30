@@ -27,9 +27,18 @@ import androidx.compose.runtime.collectAsState
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import android.Manifest
+import android.app.TimePickerDialog
+import android.icu.util.Calendar
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.work.BackoffPolicy
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import java.time.Duration
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 
 
@@ -55,8 +64,10 @@ class MainActivity : ComponentActivity() {
         val viewModel = ViewModelProvider(this, factory).get(ReminderViewModel::class.java)
         enableEdgeToEdge()
         setContent {
-            RegisterLayout(viewModel)
-            ShowLayout(viewModel)
+            Column {
+                RegisterLayout(viewModel)
+                ShowLayout(viewModel)
+            }
         }
     }
 
@@ -77,9 +88,11 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun RegisterLayout(viewModel: ReminderViewModel) {
+    // 初期値設定後、MutableStateのみ紐づけて値の更新時、UIに反映できる
     var text by remember { mutableStateOf("") }
     // Compose を使うとローカルなコンテキストを渡せる
     val context = androidx.compose.ui.platform.LocalContext.current
+    var selectedTime by remember { mutableStateOf(LocalDateTime.now()) }
 
     Column(
         modifier = Modifier
@@ -93,11 +106,39 @@ fun RegisterLayout(viewModel: ReminderViewModel) {
             label = { Text("Enter text") },
             modifier = Modifier.fillMaxWidth()
         )
+        Spacer(modifier = Modifier.height(8.dp))
+        // 時刻選択ボタン
+        Button(
+            onClick = {
+                val calendar = Calendar.getInstance()
+                val hour = calendar.get(Calendar.HOUR_OF_DAY)
+                val minute = calendar.get(Calendar.MINUTE)
+                // 時刻選択ダイアログを表示
+                TimePickerDialog(
+                    context,
+                    { _, selectedHour, selectedMinute ->
+                        selectedTime = LocalDateTime.now()
+                            .withHour(selectedHour)
+                            .withMinute(selectedMinute)
+                            .withSecond(0)
+                    },
+                    hour,
+                    minute,
+                    true
+                ).show()
+            },
+            modifier = Modifier.padding(top = 16.dp)
+        ) {
+            Text("時刻を選択: ${selectedTime.format(DateTimeFormatter.ofPattern("HH:mm"))}")
+        }
+        Spacer(modifier = Modifier.height(8.dp))
         Button(
             onClick = {
                 val reminder = Reminder(title = text)
                 // 登録
                 viewModel.insertReminder(reminder)
+                val now = LocalDateTime.now()
+                val initialDelay = ChronoUnit.SECONDS.between(now, selectedTime)
                 // WorkManager で通知をスケジュール
                 val workRequest = OneTimeWorkRequestBuilder<ReminderWorker>()
                     .setInputData(
@@ -105,7 +146,13 @@ fun RegisterLayout(viewModel: ReminderViewModel) {
                             .putString(ReminderWorker.REMINDER_CONTENT, text)
                             .build()
                     )
-                    .setInitialDelay(10, TimeUnit.SECONDS)
+                    // 遅延時間を設定
+                    .setInitialDelay(initialDelay, TimeUnit.SECONDS)
+                    // 再試行ポリシーを設定(なくてもよさそう)
+                    .setBackoffCriteria(
+                        BackoffPolicy.LINEAR,
+                        Duration.ofMinutes(1)
+                    )
                     .build()
                 WorkManager.getInstance(context).enqueue(workRequest)
                 // 入力欄をクリア
@@ -113,7 +160,7 @@ fun RegisterLayout(viewModel: ReminderViewModel) {
             },
             modifier = Modifier.padding(top = 16.dp)
         ) {
-            Text("ボタン")
+            Text("登録")
         }
     }
 }
