@@ -66,8 +66,16 @@ class RegisterReminderActivity : ComponentActivity() {
         val factory = ReminderViewModelFactory(repository)
         val viewModel = ViewModelProvider(this, factory).get(ReminderViewModel::class.java)
         setContent {
-            Column {
-                RegisterLayout(viewModel)
+            Column(modifier = Modifier.padding(20.dp)) {
+                Row(modifier = Modifier.padding(top = 10.dp)) {
+                    CancelButton()
+                    // 他の要素のサイズを除いたサイズ分、空白で埋める
+                    Spacer(modifier = Modifier.weight(1f))
+                    RegisterButton(viewModel)
+                }
+                Column {
+                    RegisterLayout(viewModel)
+                }
             }
         }
     }
@@ -86,14 +94,80 @@ class RegisterReminderActivity : ComponentActivity() {
         }
 }
 
+@Composable
+fun CancelButton() {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    Button(onClick = {
+        // 画面遷移
+        val intent = Intent(context, DisplayAllRemindersActivity::class.java)
+        context.startActivity(intent)
+    }) {
+        Text("キャンセル")
+    }
+}
+
+@Composable
+fun RegisterButton(viewModel: ReminderViewModel) {
+    // Compose を使うとローカルなコンテキストを渡せる
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val selectedTime by remember { mutableStateOf(LocalDateTime.now()) }
+    Button(
+        onClick = {
+            // 登録
+            viewModel.insertReminder(viewModel.reminder)
+            val now = LocalDateTime.now()
+            val initialDelay = ChronoUnit.SECONDS.between(now, selectedTime)
+            // 通知設定
+            val workRequest = OneTimeWorkRequestBuilder<ReminderWorker>()
+                .setInputData(
+                    Data.Builder()
+                        .putString(ReminderWorker.REMINDER_CONTENT, viewModel.reminder.title)
+                        .build()
+                )
+                // 遅延時間を設定
+                .setInitialDelay(initialDelay, TimeUnit.SECONDS)
+                .build()
+            WorkManager.getInstance(context).enqueue(workRequest)
+            // 曜日が設定されている場合
+            viewModel.selectedDays.forEach { dayOfWeek ->
+                // WorkManager で通知をスケジュール
+                val workRequestPerWeek = PeriodicWorkRequestBuilder<ReminderWorker>(
+                    repeatInterval = 7, // 7日ごとに繰り返す
+                    repeatIntervalTimeUnit = TimeUnit.DAYS
+                )
+                    .setInputData(
+                        Data.Builder()
+                            .putString(ReminderWorker.REMINDER_CONTENT, viewModel.reminder.title)
+                            .build()
+                    )
+                    // 遅延時間を設定
+                    .setInitialDelay(initialDelay, TimeUnit.SECONDS)
+                    .addTag("weekly_reminder_${dayOfWeek}")
+                    .build()
+                WorkManager.getInstance(context)
+                    .enqueueUniquePeriodicWork(
+                        "weekly_reminder_${dayOfWeek}",
+                        ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
+                        workRequestPerWeek
+                    )
+            }
+
+            // 画面遷移
+            val intent = Intent(context, DisplayAllRemindersActivity::class.java)
+            context.startActivity(intent)
+        }
+    ) {
+        Text("登録")
+    }
+}
+
 
 @Composable
 fun RegisterLayout(viewModel: ReminderViewModel) {
     // 初期値設定後、MutableStateのみ紐づけて値の更新時、UIに反映できる
-    var text by remember { mutableStateOf("") }
     // Compose を使うとローカルなコンテキストを渡せる
     val context = androidx.compose.ui.platform.LocalContext.current
-    var selectedDays by remember { mutableStateOf(emptySet<DayOfWeek>()) }
+    val selectedDays = viewModel.selectedDays
     var selectedTime by remember { mutableStateOf(LocalDateTime.now()) }
 
     Column(
@@ -103,8 +177,10 @@ fun RegisterLayout(viewModel: ReminderViewModel) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         TextField(
-            value = text,
-            onValueChange = { text = it },
+            value = viewModel.reminder.title,
+            onValueChange = { newTitle ->
+                viewModel.reminder = viewModel.reminder.copy(title = newTitle)
+            },
             label = { Text("Enter text") },
             modifier = Modifier.fillMaxWidth()
         )
@@ -117,8 +193,7 @@ fun RegisterLayout(viewModel: ReminderViewModel) {
                     dayOfWeek = dayOfWeek,
                     isSelected = selectedDays.contains(dayOfWeek),
                     onDaySelected = { isSelected ->
-                        selectedDays = if (isSelected) {
-                            // add と違って新しい Set を返している
+                        if (isSelected) {
                             selectedDays + dayOfWeek
                         } else {
                             selectedDays - dayOfWeek
@@ -150,59 +225,6 @@ fun RegisterLayout(viewModel: ReminderViewModel) {
             modifier = Modifier.padding(top = 16.dp)
         ) {
             Text("時刻を選択: ${selectedTime.format(DateTimeFormatter.ofPattern("HH:mm"))}")
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Button(
-            onClick = {
-                val reminder = Reminder(title = text)
-                // 登録
-                viewModel.insertReminder(reminder)
-                val now = LocalDateTime.now()
-                val initialDelay = ChronoUnit.SECONDS.between(now, selectedTime)
-                // 通知設定
-                val workRequest = OneTimeWorkRequestBuilder<ReminderWorker>()
-                    .setInputData(
-                        Data.Builder()
-                            .putString(ReminderWorker.REMINDER_CONTENT, text)
-                            .build()
-                    )
-                    // 遅延時間を設定
-                    .setInitialDelay(initialDelay, TimeUnit.SECONDS)
-                    .build()
-                WorkManager.getInstance(context).enqueue(workRequest)
-                // 曜日が設定されている場合
-                selectedDays.forEach { dayOfWeek ->
-                    // WorkManager で通知をスケジュール
-                    val workRequestPerWeek = PeriodicWorkRequestBuilder<ReminderWorker>(
-                        repeatInterval = 7, // 7日ごとに繰り返す
-                        repeatIntervalTimeUnit = TimeUnit.DAYS
-                    )
-                        .setInputData(
-                            Data.Builder()
-                                .putString(ReminderWorker.REMINDER_CONTENT, text)
-                                .build()
-                        )
-                        // 遅延時間を設定
-                        .setInitialDelay(initialDelay, TimeUnit.SECONDS)
-                        .addTag("weekly_reminder_${dayOfWeek}")
-                        .build()
-                    WorkManager.getInstance(context)
-                        .enqueueUniquePeriodicWork(
-                            "weekly_reminder_${dayOfWeek}",
-                            ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
-                            workRequestPerWeek
-                        )
-                }
-
-                // 入力欄をクリア
-                text = ""
-                // 画面遷移
-                val intent = Intent(context, DisplayAllRemindersActivity::class.java)
-                context.startActivity(intent)
-            },
-            modifier = Modifier.padding(top = 16.dp)
-        ) {
-            Text("登録")
         }
     }
 }
