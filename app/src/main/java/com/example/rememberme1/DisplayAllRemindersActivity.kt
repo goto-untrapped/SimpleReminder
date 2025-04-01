@@ -2,17 +2,37 @@ package com.example.rememberme1
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
 
 
@@ -28,29 +48,88 @@ class DisplayAllRemindersActivity : ComponentActivity() {
         val viewModel = ViewModelProvider(this, factory).get(ReminderViewModel::class.java)
         setContent {
             Column {
-                ShowLayout(viewModel)
-                Button(
-                    onClick = {
-                        // 画面遷移
-                        val intent = Intent(
-                            this@DisplayAllRemindersActivity,
-                            RegisterReminderActivity::class.java
-                        )
-                        startActivity(intent)
-                    }
-                ) { }
+                Spacer(modifier = Modifier.padding(top = 20.dp))
+                ScreenTitle("R E M I N D E R")
+                MainScreen(viewModel)
             }
         }
     }
 }
 
 @Composable
-fun ShowLayout(viewModel: ReminderViewModel) {
+fun ScreenTitle(title: String) {
+    Box(
+        modifier = Modifier
+            .padding(16.dp)
+            .shadow(4.dp, RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(8.dp))
+    ) {
+        Text(
+            text = title,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            style = TextStyle(
+                fontSize = 30.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        )
+    }
+}
+
+@Composable
+fun MainScreen(viewModel: ReminderViewModel) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(onClick = {
+                // ボタンがクリックされたときの処理
+                // 例: 新しいアイテムを追加するダイアログを表示する
+                // 画面遷移
+                val intent = Intent(context, RegisterReminderActivity::class.java)
+                context.startActivity(intent)
+            }) {
+                Icon(Icons.Filled.Add, "追加")
+            }
+        },
+        content = { paddingValues ->
+            Log.d("PaddingValues", "Top: ${paddingValues.calculateTopPadding()}, Bottom: ${paddingValues.calculateBottomPadding()}")
+            RemindersLayout(viewModel, modifier = Modifier.padding(paddingValues))
+        }
+    )
+}
+
+@Composable
+fun RemindersLayout(viewModel: ReminderViewModel, modifier: Modifier) {
     // データベースからリマインダーのリストを取得
     val reminders by viewModel.allReminders.collectAsState(initial = emptyList())
     LazyColumn {
         items(reminders) { reminder ->
-            Text(text = reminder.title)
+            FloatingText(text = reminder.title)
         }
+    }
+}
+
+@Composable
+fun FloatingText(text: String) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        shape = RoundedCornerShape(8.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        shadowElevation = 4.dp
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(16.dp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = TextStyle(
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+        )
     }
 }
