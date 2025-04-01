@@ -13,6 +13,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -162,6 +164,7 @@ fun RegisterButton(viewModel: ReminderViewModel) {
 }
 
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun RegisterLayout(viewModel: ReminderViewModel) {
     // 初期値設定後、MutableStateのみ紐づけて値の更新時、UIに反映できる
@@ -187,7 +190,7 @@ fun RegisterLayout(viewModel: ReminderViewModel) {
         Spacer(modifier = Modifier.height(8.dp))
         // 曜日選択
         Text("繰り返す曜日:")
-        Row {
+        FlowRow {
             DayOfWeek.entries.forEach { dayOfWeek ->
                 DayOfWeekCheckbox(
                     dayOfWeek = dayOfWeek,
