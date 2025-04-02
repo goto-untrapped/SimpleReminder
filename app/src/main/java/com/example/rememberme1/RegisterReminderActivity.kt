@@ -39,6 +39,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.google.gson.Gson
 import java.time.DayOfWeek
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -67,6 +68,13 @@ class RegisterReminderActivity : ComponentActivity() {
         val repository = ReminderRepository(database.reminderDao())
         val factory = ReminderViewModelFactory(repository)
         val viewModel = ViewModelProvider(this, factory).get(ReminderViewModel::class.java)
+        // もし登録済のリマインドを一覧で選択した場合、選択したリマインドを表示する
+        val reminderJson = intent.getStringExtra("reminder")
+        if (reminderJson != null) {
+            val reminder = reminderJson.let { Gson().fromJson(it, Reminder::class.java) }
+            viewModel.reminder = reminder
+        }
+
         setContent {
             Column(modifier = Modifier.padding(20.dp)) {
                 Row(modifier = Modifier.padding(top = 10.dp)) {

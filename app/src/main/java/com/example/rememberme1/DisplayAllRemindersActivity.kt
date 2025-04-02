@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -34,6 +35,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
+import com.google.gson.Gson
 
 
 class DisplayAllRemindersActivity : ComponentActivity() {
@@ -107,23 +109,30 @@ fun RemindersLayout(viewModel: ReminderViewModel, modifier: Modifier) {
     val reminders by viewModel.allReminders.collectAsState(initial = emptyList())
     LazyColumn {
         items(reminders) { reminder ->
-            FloatingText(text = reminder.title)
+            FloatingText(reminder)
         }
     }
 }
 
 @Composable
-fun FloatingText(text: String) {
+fun FloatingText(reminder: Reminder) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(16.dp)
+            .clickable{
+                // 画面遷移
+                val intent = Intent(context, RegisterReminderActivity::class.java)
+                intent.putExtra("reminder", Gson().toJson(reminder))
+                context.startActivity(intent)
+            },
         shape = RoundedCornerShape(8.dp),
         color = MaterialTheme.colorScheme.surfaceVariant,
         shadowElevation = 4.dp
     ) {
         Text(
-            text = text,
+            text = reminder.title,
             modifier = Modifier.padding(16.dp),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = TextStyle(
