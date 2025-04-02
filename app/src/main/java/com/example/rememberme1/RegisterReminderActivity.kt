@@ -131,7 +131,7 @@ fun RegisterButton(viewModel: ReminderViewModel) {
                 .build()
             WorkManager.getInstance(context).enqueue(workRequest)
             // 曜日が設定されている場合
-            viewModel.selectedDays.forEach { dayOfWeek ->
+            viewModel.reminder.remindWeekDays.forEach { dayOfWeek ->
                 // WorkManager で通知をスケジュール
                 val workRequestPerWeek = PeriodicWorkRequestBuilder<ReminderWorker>(
                     repeatInterval = 7, // 7日ごとに繰り返す
@@ -170,7 +170,6 @@ fun RegisterLayout(viewModel: ReminderViewModel) {
     // 初期値設定後、MutableStateのみ紐づけて値の更新時、UIに反映できる
     // Compose を使うとローカルなコンテキストを渡せる
     val context = androidx.compose.ui.platform.LocalContext.current
-    val selectedDays = viewModel.selectedDays
     var selectedTime by remember { mutableStateOf(LocalDateTime.now()) }
 
     Column(
@@ -194,13 +193,14 @@ fun RegisterLayout(viewModel: ReminderViewModel) {
             DayOfWeek.entries.forEach { dayOfWeek ->
                 DayOfWeekCheckbox(
                     dayOfWeek = dayOfWeek,
-                    isSelected = selectedDays.contains(dayOfWeek),
+                    isSelected = viewModel.reminder.remindWeekDays.contains(dayOfWeek),
                     onDaySelected = { isSelected ->
-                        if (isSelected) {
-                            selectedDays + dayOfWeek
+                        val updatedWeekDays = if (isSelected) {
+                            viewModel.reminder.remindWeekDays + dayOfWeek
                         } else {
-                            selectedDays - dayOfWeek
+                            viewModel.reminder.remindWeekDays - dayOfWeek
                         }
+                        viewModel.reminder = viewModel.reminder.copy(remindWeekDays = updatedWeekDays)
                     }
                 )
             }
