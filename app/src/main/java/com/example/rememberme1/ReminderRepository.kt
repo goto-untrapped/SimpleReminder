@@ -9,4 +9,8 @@ class ReminderRepository(private val reminderDao: ReminderDao) {
         reminderDao.insert(reminder)
     }
 
+    suspend fun update(reminder: Reminder) {
+        reminderDao.update(reminder)
+    }
+
 }

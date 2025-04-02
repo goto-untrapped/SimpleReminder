@@ -15,6 +15,11 @@ class ReminderViewModel(private val repository: ReminderRepository) : ViewModel(
             repository.insert(reminder)
         }
     }
+    fun updateReminder(reminder: Reminder) {
+        viewModelScope.launch {
+            repository.update(reminder)
+        }
+    }
 
     var reminder by mutableStateOf(Reminder(
         title = "",

@@ -70,9 +70,11 @@ class RegisterReminderActivity : ComponentActivity() {
         val viewModel = ViewModelProvider(this, factory).get(ReminderViewModel::class.java)
         // もし登録済のリマインドを一覧で選択した場合、選択したリマインドを表示する
         val reminderJson = intent.getStringExtra("reminder")
+        var update = false
         if (reminderJson != null) {
             val reminder = reminderJson.let { Gson().fromJson(it, Reminder::class.java) }
             viewModel.reminder = reminder
+            update = true
         }
 
         setContent {
@@ -81,7 +83,7 @@ class RegisterReminderActivity : ComponentActivity() {
                     CancelButton()
                     // 他の要素のサイズを除いたサイズ分、空白で埋める
                     Spacer(modifier = Modifier.weight(1f))
-                    RegisterButton(viewModel)
+                    RegisterOrUpdateButton(viewModel, update)
                 }
                 Column {
                     RegisterLayout(viewModel)
@@ -117,14 +119,19 @@ fun CancelButton() {
 }
 
 @Composable
-fun RegisterButton(viewModel: ReminderViewModel) {
+fun RegisterOrUpdateButton(viewModel: ReminderViewModel, update: Boolean) {
     // Compose を使うとローカルなコンテキストを渡せる
     val context = androidx.compose.ui.platform.LocalContext.current
     val selectedTime by remember { mutableStateOf(LocalDateTime.now()) }
     Button(
         onClick = {
-            // 登録
-            viewModel.insertReminder(viewModel.reminder)
+            if (update) {
+                // 更新
+                viewModel.updateReminder(viewModel.reminder)
+            } else {
+                // 登録
+                viewModel.insertReminder(viewModel.reminder)
+            }
             val now = LocalDateTime.now()
             val initialDelay = ChronoUnit.SECONDS.between(now, selectedTime)
             // 通知設定
@@ -167,10 +174,13 @@ fun RegisterButton(viewModel: ReminderViewModel) {
             context.startActivity(intent)
         }
     ) {
-        Text("登録")
+        if (update) {
+            Text("更新")
+        } else {
+            Text("登録")
+        }
     }
 }
-
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
