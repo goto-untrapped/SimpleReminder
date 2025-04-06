@@ -31,7 +31,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.work.Data
@@ -200,6 +203,14 @@ fun RegisterLayout(viewModel: ReminderViewModel) {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Text(
+            text = "タイトル",
+            modifier = Modifier.fillMaxWidth(),
+            style = TextStyle(
+                fontSize = 20.sp
+            )
+        )
+        Spacer(modifier = Modifier.height(4.dp))
         TextField(
             value = viewModel.reminder.title,
             onValueChange = { newTitle ->
@@ -208,6 +219,15 @@ fun RegisterLayout(viewModel: ReminderViewModel) {
             label = { Text("テキストを入力してください") },
             modifier = Modifier.fillMaxWidth()
         )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "メモ",
+            modifier = Modifier.fillMaxWidth(),
+            style = TextStyle(
+                fontSize = 20.sp
+            )
+        )
+        Spacer(modifier = Modifier.height(4.dp))
         TextField(
             value = viewModel.reminder.memo,
             onValueChange = { newMemo ->
@@ -218,7 +238,13 @@ fun RegisterLayout(viewModel: ReminderViewModel) {
         )
         Spacer(modifier = Modifier.height(8.dp))
         // 曜日選択
-        Text("繰り返す曜日:")
+        Text(
+            text = "繰り返す曜日",
+            modifier = Modifier.fillMaxWidth(),
+            style = TextStyle(
+                fontSize = 20.sp
+            )
+        )
         FlowRow {
             DayOfWeek.entries.forEach { dayOfWeek ->
                 DayOfWeekCheckbox(
@@ -235,6 +261,14 @@ fun RegisterLayout(viewModel: ReminderViewModel) {
                 )
             }
         }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "時刻を選択",
+            modifier = Modifier.fillMaxWidth(),
+            style = TextStyle(
+                fontSize = 20.sp
+            )
+        )
         // 時刻選択ボタン
         Button(
             onClick = {
@@ -257,7 +291,13 @@ fun RegisterLayout(viewModel: ReminderViewModel) {
             },
             modifier = Modifier.padding(top = 16.dp)
         ) {
-            Text("時刻を選択: ${selectedTime.format(DateTimeFormatter.ofPattern("HH:mm"))}")
+            Text(
+                text = selectedTime.format(DateTimeFormatter.ofPattern("HH:mm")),
+                style = TextStyle(
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            )
         }
     }
 }
