@@ -39,9 +39,10 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import java.time.DayOfWeek
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
@@ -72,7 +73,10 @@ class RegisterReminderActivity : ComponentActivity() {
         val reminderJson = intent.getStringExtra("reminder")
         var update = false
         if (reminderJson != null) {
-            val reminder = reminderJson.let { Gson().fromJson(it, Reminder::class.java) }
+            val gson = GsonBuilder()
+                .registerTypeAdapter(LocalTime::class.java, LocalTimeTypeAdapter())
+                .create()
+            val reminder = reminderJson.let { gson.fromJson(it, Reminder::class.java) }
             viewModel.reminder = reminder
             update = true
         }
@@ -188,7 +192,7 @@ fun RegisterLayout(viewModel: ReminderViewModel) {
     // 初期値設定後、MutableStateのみ紐づけて値の更新時、UIに反映できる
     // Compose を使うとローカルなコンテキストを渡せる
     val context = androidx.compose.ui.platform.LocalContext.current
-    var selectedTime by remember { mutableStateOf(LocalDateTime.now()) }
+    var selectedTime by remember { mutableStateOf(viewModel.reminder.remindTime) }
 
     Column(
         modifier = Modifier
@@ -201,7 +205,15 @@ fun RegisterLayout(viewModel: ReminderViewModel) {
             onValueChange = { newTitle ->
                 viewModel.reminder = viewModel.reminder.copy(title = newTitle)
             },
-            label = { Text("Enter text") },
+            label = { Text("テキストを入力してください") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        TextField(
+            value = viewModel.reminder.memo,
+            onValueChange = { newMemo ->
+                viewModel.reminder = viewModel.reminder.copy(memo = newMemo)
+            },
+            label = { Text("メモを入力してください") },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -227,16 +239,16 @@ fun RegisterLayout(viewModel: ReminderViewModel) {
         Button(
             onClick = {
                 val calendar = Calendar.getInstance()
+                calendar.set(Calendar.HOUR_OF_DAY, selectedTime.hour)
+                calendar.set(Calendar.MINUTE, selectedTime.minute)
                 val hour = calendar.get(Calendar.HOUR_OF_DAY)
                 val minute = calendar.get(Calendar.MINUTE)
                 // 時刻選択ダイアログを表示
                 TimePickerDialog(
                     context,
                     { _, selectedHour, selectedMinute ->
-                        selectedTime = LocalDateTime.now()
-                            .withHour(selectedHour)
-                            .withMinute(selectedMinute)
-                            .withSecond(0)
+                        selectedTime = LocalTime.of(selectedHour, selectedMinute)
+                        viewModel.reminder = viewModel.reminder.copy(remindTime = selectedTime)
                     },
                     hour,
                     minute,

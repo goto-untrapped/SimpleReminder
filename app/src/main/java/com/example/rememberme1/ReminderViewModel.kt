@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
+import java.time.LocalTime
 
 class ReminderViewModel(private val repository: ReminderRepository) : ViewModel() {
     val allReminders = repository.allReminders
@@ -21,14 +22,14 @@ class ReminderViewModel(private val repository: ReminderRepository) : ViewModel(
         }
     }
 
+    // 登録時
     var reminder by mutableStateOf(Reminder(
         title = "",
         memo = "",
-        remindTime = "",
+        remindTime = LocalTime.now(),
         remindWeekDays = emptySet(),
         registerDatetime = "",
         updateDatetime = ""
-    )
-    )
+    ))
 
 }

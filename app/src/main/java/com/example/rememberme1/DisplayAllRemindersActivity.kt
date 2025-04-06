@@ -35,7 +35,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
-import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import java.time.LocalTime
 
 
 class DisplayAllRemindersActivity : ComponentActivity() {
@@ -117,6 +118,7 @@ fun RemindersLayout(viewModel: ReminderViewModel, modifier: Modifier) {
 @Composable
 fun FloatingText(reminder: Reminder) {
     val context = androidx.compose.ui.platform.LocalContext.current
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -124,7 +126,10 @@ fun FloatingText(reminder: Reminder) {
             .clickable{
                 // 画面遷移
                 val intent = Intent(context, RegisterReminderActivity::class.java)
-                intent.putExtra("reminder", Gson().toJson(reminder))
+                val gson = GsonBuilder()
+                    .registerTypeAdapter(LocalTime::class.java, LocalTimeTypeAdapter())
+                    .create()
+                intent.putExtra("reminder", gson.toJson(reminder))
                 context.startActivity(intent)
             },
         shape = RoundedCornerShape(8.dp),
