@@ -85,15 +85,17 @@ class RegisterReminderActivity : ComponentActivity() {
         }
 
         setContent {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Row(modifier = Modifier.padding(top = 10.dp)) {
-                    CancelButton()
-                    // 他の要素のサイズを除いたサイズ分、空白で埋める
-                    Spacer(modifier = Modifier.weight(1f))
-                    RegisterOrUpdateButton(viewModel, update)
-                }
-                Column {
-                    RegisterLayout(viewModel)
+            MyCustomTheme {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Row(modifier = Modifier.padding(top = 10.dp)) {
+                        CancelButton()
+                        // 他の要素のサイズを除いたサイズ分、空白で埋める
+                        Spacer(modifier = Modifier.weight(1f))
+                        RegisterOrUpdateButton(viewModel, update)
+                    }
+                    Column {
+                        RegisterLayout(viewModel)
+                    }
                 }
             }
         }
