@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.icu.util.Calendar
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -42,6 +43,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.example.compose.AppTheme
 import com.google.gson.GsonBuilder
 import java.time.DayOfWeek
 import java.time.LocalDateTime
@@ -85,7 +87,7 @@ class RegisterReminderActivity : ComponentActivity() {
         }
 
         setContent {
-            MyCustomTheme {
+            AppTheme {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Row(modifier = Modifier.padding(top = 10.dp)) {
                         CancelButton()
@@ -131,7 +133,6 @@ fun CancelButton() {
 fun RegisterOrUpdateButton(viewModel: ReminderViewModel, update: Boolean) {
     // Compose を使うとローカルなコンテキストを渡せる
     val context = androidx.compose.ui.platform.LocalContext.current
-    val selectedTime by remember { mutableStateOf(LocalDateTime.now()) }
     Button(
         onClick = {
             if (update) {
@@ -142,7 +143,9 @@ fun RegisterOrUpdateButton(viewModel: ReminderViewModel, update: Boolean) {
                 viewModel.insertReminder(viewModel.reminder)
             }
             val now = LocalDateTime.now()
-            val initialDelay = ChronoUnit.SECONDS.between(now, selectedTime)
+            val remindDateTime = now.with(viewModel.reminder.remindTime)
+            val initialDelay = ChronoUnit.SECONDS.between(now, remindDateTime)
+            Log.i("initialDelay", initialDelay.toString())
             // 通知設定
             val workRequest = OneTimeWorkRequestBuilder<ReminderWorker>()
                 .setInputData(

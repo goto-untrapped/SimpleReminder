@@ -24,19 +24,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
+import com.example.compose.AppTheme
 import com.google.gson.GsonBuilder
 import java.time.LocalTime
 
@@ -52,7 +51,7 @@ class DisplayAllRemindersActivity : ComponentActivity() {
         val factory = ReminderViewModelFactory(repository)
         val viewModel = ViewModelProvider(this, factory).get(ReminderViewModel::class.java)
         setContent {
-            MyCustomTheme {
+            AppTheme {
                 Column {
                     Spacer(modifier = Modifier.padding(top = 20.dp))
                     ScreenTitle("R E M I N D E R")
@@ -61,34 +60,6 @@ class DisplayAllRemindersActivity : ComponentActivity() {
             }
         }
     }
-}
-
-@Composable
-fun MyCustomTheme(content: @Composable () -> Unit) {
-    MaterialTheme(
-        colorScheme = darkColorScheme(
-            primary = Color(0xFF1E1E1E),
-            onPrimary = Color.White,
-            primaryContainer = Color(0xFF333333), // ここで primaryContainer を上書き
-            onPrimaryContainer = Color.White,
-            secondary = Color(0xFFBDBDBD),
-            onSecondary = Color.Black,
-            secondaryContainer = Color(0xFF424242),
-            onSecondaryContainer = Color.Black,
-            background = Color(0xFF121212),
-            onBackground = Color.White,
-            surface = Color(0xFF1E1E1E),
-            onSurface = Color.White,
-            surfaceVariant = Color(0xFF333333),
-            onSurfaceVariant = Color.White,
-            error = Color(0xFFCF6679),
-            onError = Color.Black,
-            errorContainer = Color(0xFFB3261E),
-            onErrorContainer = Color.White,
-            outline = Color(0xFF757575)
-        ),
-        content = content
-    )
 }
 
 @Composable
